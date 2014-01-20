@@ -3,31 +3,46 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <chrono>
 
 int recursiveKnapsack(std::vector<int> sizes, std::vector<int> values, int n, int size);
 int cachingKnapsack(std::vector<int> sizes, std::vector<int> values, std::vector<std::vector<int>> &cache, int n, int size);
 int dynamicKnapsack(std::vector<int> sizes, std::vector<int> values, int n, int size);
 
-const int KNAPSIZE = 1000;
-const int MAXSIZE = 100;
-const int MAXVAL = 100;
-const int ITEMS = 20;
 
-int main(){
-	std::uniform_int_distribution<> sizeDist(1, MAXSIZE);
+int main(int argc, char **argv){
+	if(argc < 3){
+		std::cout<<"Too few arguments\n";
+		return 0;
+	}
+	int ITEMS = atoi(argv[2]);
+	int KNAPSIZE = (argv[1][1] == 'r') ? 1000 : ITEMS * 10;
+	int MAXSIZE = (argv[1][1] == 'r') ? 1000 : ITEMS * 10;
+	int MAXVAL = (argv[1][1] == 'r') ? 1000 : ITEMS * 10;
+	int MINSIZE = (argc < 4) ? 1 : ((argv[3][1] == 'w') ? 1 : (KNAPSIZE / 20));
+
+	std::uniform_int_distribution<> sizeDist(MINSIZE, MAXSIZE);
 	std::uniform_int_distribution<> valDist(1, MAXVAL);
 	std::mt19937 rng(time(NULL));
-
 	std::vector<int> sizes(ITEMS);
 	std::vector<int> values(ITEMS);
+	std::vector<std::vector<int>> cache(ITEMS, std::vector<int>(KNAPSIZE, -1));
 
 	std::generate(sizes.begin(), sizes.end(), [&](){return sizeDist(rng);});
 	std::generate(values.begin(), values.end(), [&](){return valDist(rng);});
-	std::vector<std::vector<int>> cache(ITEMS, std::vector<int>(KNAPSIZE, -1));
 
-	std::cout<<recursiveKnapsack(sizes, values, ITEMS - 1, KNAPSIZE)<<std::endl;
-	std::cout<<cachingKnapsack(sizes, values, cache, ITEMS - 1, KNAPSIZE)<<std::endl;
-	std::cout<<dynamicKnapsack(sizes, values, ITEMS, KNAPSIZE)<<std::endl;
+	std::cout<<"Problem size: "<<ITEMS<<std::endl;
+	
+	auto start = std::chrono::steady_clock::now();
+	switch(argv[1][1]){
+		case 'r': std::cout<<"Max value in knapsack: "<<recursiveKnapsack(sizes, values, ITEMS - 1, KNAPSIZE)<<std::endl; //Takes ITEMS - 1 to compensate for indexing
+			break;
+		case 'c': std::cout<<"Max value in knapsack: "<<cachingKnapsack(sizes, values, cache, ITEMS - 1, KNAPSIZE)<<std::endl; //Takes ITEMS - 1 to compensate for indexing
+			break;
+		case 'd': std::cout<<"Max value in knapsack: "<<dynamicKnapsack(sizes, values, ITEMS, KNAPSIZE)<<std::endl;
+			break;
+	}
+	std::cout<<"Took "<<std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - start).count()<<" seconds to run\n";
 }
 
 int recursiveKnapsack(std::vector<int> sizes, std::vector<int> values, int n, int size){
