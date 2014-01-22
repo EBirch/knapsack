@@ -1,3 +1,5 @@
 for i in {6..20}; do
-	./knapsack -r `echo $i` | tee | grep "Mean time" | awk '{print $3}' | tee -a recursive
+	echo Size $i
+	echo -n $i ''>> recursiveData
+	./knapsack -r `echo $i` | grep "Mean time" | echo `awk '{print $3}'` >> recursiveData
 done
