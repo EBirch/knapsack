@@ -1,4 +1,4 @@
-SIZES="64 128 256 512 1024"
+SIZES="64 128 256 512 1024 2048 4096 8192"
 for i in $SIZES; do
 	echo Size $i
 	echo -n $i ''>> otherData

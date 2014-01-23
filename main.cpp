@@ -5,9 +5,9 @@
 #include <algorithm>
 #include <chrono>
 
-int recursiveKnapsack(std::vector<int> sizes, std::vector<int> values, int n, int size);
-int cachingKnapsack(std::vector<int> sizes, std::vector<int> values, std::vector<std::vector<int>> &cache, int n, int size);
-int dynamicKnapsack(std::vector<int> sizes, std::vector<int> values, int n, int size);
+int recursiveKnapsack(std::vector<int> &sizes, std::vector<int> &values, int n, int size);
+int cachingKnapsack(std::vector<int> &sizes, std::vector<int> &values, std::vector<std::vector<int>> &cache, int n, int size);
+int dynamicKnapsack(std::vector<int> &sizes, std::vector<int> &values, int n, int size);
 
 int main(int argc, char **argv){
 	if(argc < 3){
@@ -49,7 +49,7 @@ int main(int argc, char **argv){
 	std::cout<<"Mean time: "<<(std::accumulate(times.begin(), times.end(), 0.0) / times.size())<<" seconds"<<std::endl<<std::endl;
 }
 
-int recursiveKnapsack(std::vector<int> sizes, std::vector<int> values, int n, int size){
+int recursiveKnapsack(std::vector<int> &sizes, std::vector<int> &values, int n, int size){
 	if(n < 0 || size <= 0){
 		return 0;
 	}
@@ -58,7 +58,7 @@ int recursiveKnapsack(std::vector<int> sizes, std::vector<int> values, int n, in
 	return std::max(notUsed, used);
 }
 
-int cachingKnapsack(std::vector<int> sizes, std::vector<int> values, std::vector<std::vector<int>> &cache, int n, int size){
+int cachingKnapsack(std::vector<int> &sizes, std::vector<int> &values, std::vector<std::vector<int>> &cache, int n, int size){
 	if(n < 0 || size <= 0){
 		return 0;
 	}
@@ -70,7 +70,7 @@ int cachingKnapsack(std::vector<int> sizes, std::vector<int> values, std::vector
 	return cache[n][size - 1];
 }
 
-int dynamicKnapsack(std::vector<int> sizes, std::vector<int> values, int n, int size){
+int dynamicKnapsack(std::vector<int> &sizes, std::vector<int> &values, int n, int size){
 	std::vector<std::vector<int>> cache(n + 1, std::vector<int>(size + 1, 0));
 	for(int i = 1;i < cache.size(); ++i){
 		for(int j = 1;j < cache[i].size(); ++j){
