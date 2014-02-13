@@ -9,7 +9,7 @@
 int recursiveKnapsack(std::vector<int> &sizes, std::vector<int> &values, int n, int size);
 int cachingKnapsack(std::vector<int> &sizes, std::vector<int> &values, std::vector<std::vector<int>> &cache, int n, int size);
 int dynamicKnapsack(std::vector<int> &sizes, std::vector<int> &values, int n, int size);
-int dynamicLinearKnapsack(std::vector<int> &sizes, std::vector<int> &values, std::vector<bool> &used, int itemsLow, int itemsHigh, int sizeLot, int sizeHigh);
+void dynamicLinearKnapsack(std::vector<int> &sizes, std::vector<int> &values, std::vector<int> &used, int itemsLow, int itemsHigh, int capacity);
 std::vector<bool> dynamicBacktrace(std::vector<std::vector<int>> &cache, std::vector<int> &sizes);
 std::vector<bool> cachingBacktrace(std::vector<std::vector<int>> &cache, std::vector<int> &sizes);
 
@@ -24,9 +24,9 @@ int main(int argc, char **argv){
 	// int MAXVAL = (argv[1][1] == 'r') ? 100 : ITEMS * 10;
 	// int MINSIZE = (argc < 4) ? 1 : ((argv[3][1] == 'w') ? 1 : (KNAPSIZE / 20));
 	int KNAPSIZE = 10;
-	int ITEMS = 5;
-	int MAXSIZE = 5;
-	int MAXVAL = 5;
+	int ITEMS = 4;
+	int MAXSIZE = 10;
+	int MAXVAL = 10;
 	int MINSIZE = 1;
 
 	std::uniform_int_distribution<> sizeDist(MINSIZE, MAXSIZE);
@@ -38,12 +38,21 @@ int main(int argc, char **argv){
 	std::cout<<"Knapsize: "<<KNAPSIZE<<std::endl;
 
 
-	std::vector<int> sizes(ITEMS);
-	// std::vector<int> sizes;
-	std::vector<int> values(ITEMS);
-	// std::vector<int> values;
-	std::generate(sizes.begin(), sizes.end(), [&](){return sizeDist(rng);});
-	std::generate(values.begin(), values.end(), [&](){return valDist(rng);});
+	// std::vector<int> sizes(ITEMS);
+	std::vector<int> sizes;
+	// std::vector<int> values(ITEMS);
+	std::vector<int> values;
+	// std::generate(sizes.begin(), sizes.end(), [&](){return sizeDist(rng);});
+	// std::generate(values.begin(), values.end(), [&](){return valDist(rng);});
+
+	sizes.push_back(7);
+	values.push_back(5);
+	sizes.push_back(10);
+	values.push_back(2);
+	sizes.push_back(7);
+	values.push_back(7);
+	sizes.push_back(1);
+	values.push_back(10);
 
 	// sizes.push_back(5);
 	// values.push_back(4);
@@ -51,16 +60,39 @@ int main(int argc, char **argv){
 	// values.push_back(9);
 	// sizes.push_back(6);
 	// values.push_back(2);
-	
+	// sizes.push_back(3);
+	// values.push_back(7);
+	// sizes.push_back(2);
+	// values.push_back(6);
+	// sizes.push_back(6);
+	// values.push_back(4);
+	// sizes.push_back(1);
+	// values.push_back(3);
+	// sizes.push_back(4);
+	// values.push_back(4);
+
+
 	for(int i = 0; i < sizes.size(); ++i){
 		std::cout<<"Item "<<i<<": size "<<sizes[i]<<" val "<<values[i]<<std::endl;
 	}
 
-	std::vector<bool> used(ITEMS);
-	auto temp = dynamicLinearKnapsack(sizes, values, used, 0, ITEMS, 0, KNAPSIZE);
+	auto temp = dynamicKnapsack(sizes, values, ITEMS, KNAPSIZE);
+
+	std::vector<int> used(ITEMS, -1);
+	dynamicLinearKnapsack(sizes, values, used, 0, ITEMS, KNAPSIZE);
+	int cap = 0, val = 0;
 	for(int i=0;i<used.size();++i){
 		std::cout<<used[i]<<" ";
+		if(used[i]){
+			cap+=sizes[i];
+			val+=values[i];
+		}
 	}
+
+	std::cout<<"\n\nCap: "<<cap<<", knapsize: "<<KNAPSIZE<<std::endl;
+	std::cout<<"Val: "<<val<<", answer: "<<temp<<std::endl;
+
+	std::cout<<'\n';
 
 	// auto temp=dynamicKnapsack(sizes, values, ITEMS, KNAPSIZE);
 	// std::vector<std::vector<int>> cache(ITEMS, std::vector<int>(KNAPSIZE, -1));
@@ -131,6 +163,12 @@ int dynamicKnapsack(std::vector<int> &sizes, std::vector<int> &values, int n, in
 			cache[i][j] = std::max(cache[i-1][j], used);
 		}
 	}
+	for(int i = cache.size()-1;i>=0;--i){
+		for(auto &col : cache[i]){
+			std::cout<<std::setw(3)<<col;
+		}
+		std::cout<<std::endl;
+	}
 	auto temp = dynamicBacktrace(cache, sizes);
 	for(int i=0;i<temp.size();++i){
 		std::cout<<temp[i]<<" ";
@@ -140,29 +178,62 @@ int dynamicKnapsack(std::vector<int> &sizes, std::vector<int> &values, int n, in
 	return cache[n][size];
 }
 
-int dynamicLinearKnapsack(std::vector<int> &sizes, std::vector<int> &values, std::vector<bool> &used, int itemsLow, int itemsHigh, int sizeLow, int sizeHigh){
-	std::vector<int> kPrevCol(size + 1, 0);
-	std::vector<int> kCol(size + 1, 0);
-	std::vector<int> kNextCol(size + 1, 0);
-	std::vector<std::vector<int>> cache(n + 1, std::vector<int>(size + 1, 0));
+void dynamicLinearKnapsack(std::vector<int> &sizes, std::vector<int> &values, std::vector<int> &used, int itemsLow, int itemsHigh, int capacity){
+	std::cout<<"Called from "<<itemsLow<<" to "<<itemsHigh<<std::endl;
+	int mid = (itemsLow + itemsHigh) / 2;
+	std::cout<<"Called to solve: "<<mid<<std::endl;
+	if(itemsLow == itemsHigh){
+		if(used[itemsLow] == -1)
+			used[itemsLow] = sizes[itemsLow] <= capacity;
+		std::cout<<"With "<<itemsLow<<" : "<<itemsHigh<<" Hit base case at "<<mid<<" : "<<used[mid]<<std::endl;
+		return;
+	}
+	std::vector<int> kPrevCol(capacity + 1, 0);
+	std::vector<int> kCol(capacity + 1, 0);
+	std::vector<int> kNextCol(capacity + 1, 0);
 
-	for(int i = 1; i < size + 1; ++i){
-
+	for(int i = 0; i < kCol.size(); ++i){
+		kCol[i] = (i - sizes[itemsHigh - 1] >= 0) ? (values[itemsHigh - 1]) : 0;
 	}
 
-	for(int i = 1;i < cache.size(); ++i){
-		for(int j = 1;j < cache[i].size(); ++j){
-			auto used = (j - sizes[i-1] >= 0) ? (cache[i-1][j-sizes[i-1]] + values[i-1]) : 0;
-			cache[i][j] = std::max(cache[i-1][j], used);
+	for(int i = itemsHigh - 2; i > mid; --i){
+		kNextCol = kCol;
+		for(int j = 0; j < kCol.size(); ++j){
+			auto used = (j - sizes[i] >= 0) ? (kNextCol[j-sizes[i]] + values[i]) : 0;
+			kCol[j] = std::max(kNextCol[j], used);
 		}
 	}
-	auto temp = dynamicBacktrace(cache, sizes);
-	for(int i=0;i<temp.size();++i){
-		std::cout<<temp[i]<<" ";
-	}
-	std::cout<<'\n';
 
-	return cache[n][size];
+	kNextCol = kCol;
+
+	for(int i = 0; i < kCol.size(); ++i){
+		kCol[i] = (i - sizes[itemsLow] >= 0) ? (values[itemsLow]) : 0;
+	}
+
+	for(int i = itemsLow + 1; i <= mid; ++i){
+		kPrevCol = kCol;
+		for(int j = 0; j < kCol.size(); ++j){
+			auto used = (j - sizes[i] >= 0) ? (kPrevCol[j-sizes[i]] + values[i]) : 0;
+			kCol[j] = std::max(kPrevCol[j], used);
+		}
+	}
+
+	int bestSize = 0, bestVal = 0;
+
+	for(int i = 0; i < kCol.size(); ++i){
+		if((kCol[i] + kNextCol[kNextCol.size() - i - 1]) >= bestVal){
+			bestVal = (kCol[i] + kNextCol[kNextCol.size() - i - 1]);
+			bestSize = i;
+		}
+	}
+
+	used[mid] = (kPrevCol[bestSize] != kCol[bestSize]);
+
+	std::cout<<"Set used at "<<mid<<" to "<<used[mid]<<std::endl;
+
+	dynamicLinearKnapsack(sizes, values, used, itemsLow, mid, bestSize);
+	dynamicLinearKnapsack(sizes, values, used, mid + 1, itemsHigh, capacity - bestSize);
+
 }
 
 std::vector<bool> dynamicBacktrace(std::vector<std::vector<int>> &cache, std::vector<int> &sizes){
